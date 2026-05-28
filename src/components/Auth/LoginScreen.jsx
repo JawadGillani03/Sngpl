@@ -14,8 +14,8 @@ import React, { useState, useRef, useEffect } from 'react';
 import { RiDropFill, RiEyeLine, RiEyeOffLine, RiLockLine, RiUserLine, RiShieldLine } from 'react-icons/ri';
 
 // ── Hardcoded credentials — change these ──────────────────────────
-const VALID_ID       = 'geowell';
-const VALID_PASSWORD = 'geowell@2024';
+const VALID_ID       = 'Jawad Gillani';
+const VALID_PASSWORD = 'jawad174@';
 // ─────────────────────────────────────────────────────────────────
 
 export default function LoginScreen({ onLogin, darkMode }) {
