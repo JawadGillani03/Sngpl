@@ -4,8 +4,8 @@
  * Hardcoded credentials — frontend only.
  *
  * Default credentials:
- *   ID:       geowell
- *   Password: geowell@2024
+ *   ID:       Jawad Gillani
+ *   Password: jawad174@
  *
  * Change VALID_ID and VALID_PASSWORD below to update them.
  */

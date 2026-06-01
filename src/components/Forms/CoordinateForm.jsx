@@ -48,6 +48,8 @@ export default function CoordinateForm({
     { name: 'Makori East Well-1', lat: 33.260341, lon: 71.335008, region: 'Makori East' },
     { name: 'Makori East Well-2', lat: 33.269111, lon: 71.327344, region: 'Makori East' },
     { name: 'Makori East Well-3', lat: 33.265298, lon: 71.344397, region: 'Makori East' },
+    { name: 'Tolang wast Well-1', lat: 33.532068, lon: 71.638509, region: 'Tolang' },
+    { name: 'Tolang East Well-1', lat: 33.532068, lon: 71.638509, region: 'Tolang' },
   ];
 
   // Filter wells based on search
