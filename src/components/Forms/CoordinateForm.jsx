@@ -2,6 +2,7 @@
  * CoordinateForm Component
  * Input form for well or home coordinates
  * Fully responsive across all screen sizes
+ * Includes 5km well proximity check for home coordinates
  */
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -14,19 +15,36 @@ import {
   RiDatabase2Line,
   RiArrowDownSLine,
   RiCheckLine,
+  RiRadarLine,
+  RiSignalWifiErrorLine,
 } from 'react-icons/ri';
 
+// ─── Haversine distance (km) between two lat/lon points ───────────────────────
+function haversineKm(lat1, lon1, lat2, lon2) {
+  const R = 6371;
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLon = ((lon2 - lon1) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos((lat1 * Math.PI) / 180) *
+      Math.cos((lat2 * Math.PI) / 180) *
+      Math.sin(dLon / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
 export default function CoordinateForm({
-  type = 'well', // 'well' | 'home'
+  type = 'well',         // 'well' | 'home'
   form,
   onUpdate,
   errors,
   darkMode,
   onSaveWell,
+  savedWells,            // optional: external array of saved wells to check against
 }) {
   const [isExpanded, setIsExpanded] = useState(true);
   const [showPredefined, setShowPredefined] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [wellsInRange, setWellsInRange] = useState([]); // [{ ...well, distance: km }] sorted by distance
   const dropdownRef = useRef(null);
   const searchInputRef = useRef(null);
 
@@ -37,50 +55,71 @@ export default function CoordinateForm({
   const nameError = errors[`${type}_name`];
   const coordError = errors[`${type}_coords`];
 
-  // Predefined wells data
+  // ─── Predefined wells data ─────────────────────────────────────────────────
   const predefinedWells = [
-    { name: 'Dhok Hussain Well-1', lat: 33.451539, lon: 71.585795, region: 'Dhok Hussain' },
-    { name: 'Dhok Hussain Well-2', lat: 33.453823, lon: 71.590830, region: 'Dhok Hussain' },
-    { name: 'Tough Well-1', lat: 33.564671, lon: 71.526270, region: 'Tough' },
-    { name: 'Tough Well-2', lat: 33.566764, lon: 71.523612, region: 'Tough' },
-    { name: 'Tough Well-3', lat: 33.568457, lon: 71.520554, region: 'Tough' },
-    { name: 'Shekian Well-1', lat: 33.583988, lon: 71.509603, region: 'Shekian' },
-    { name: 'Makori East Well-1', lat: 33.260341, lon: 71.335008, region: 'Makori East' },
-    { name: 'Makori East Well-2', lat: 33.269111, lon: 71.327344, region: 'Makori East' },
-    { name: 'Makori East Well-3', lat: 33.265298, lon: 71.344397, region: 'Makori East' },
-    { name: 'Tolang wast Well-1', lat: 33.532068, lon: 71.638509, region: 'Tolang' },
-    { name: 'Tolang East Well-1', lat: 33.532068, lon: 71.638509, region: 'Tolang' },
+    { name: 'Dhok Hussain Well-1',  lat: 33.451539, lon: 71.585795, region: 'Dhok Hussain' },
+    { name: 'Dhok Hussain Well-2',  lat: 33.453823, lon: 71.590830, region: 'Dhok Hussain' },
+    { name: 'Tough Well-1',         lat: 33.564671, lon: 71.526270, region: 'Tough' },
+    { name: 'Tough Well-2',         lat: 33.566764, lon: 71.523612, region: 'Tough' },
+    { name: 'Tough Well-3',         lat: 33.568457, lon: 71.520554, region: 'Tough' },
+    { name: 'Shekian Well-1',       lat: 33.583988, lon: 71.509603, region: 'Shekian' },
+    { name: 'Makori East Well-1',   lat: 33.260341, lon: 71.335008, region: 'Makori East' },
+    { name: 'Makori East Well-2',   lat: 33.269111, lon: 71.327344, region: 'Makori East' },
+    { name: 'Makori East Well-3',   lat: 33.265298, lon: 71.344397, region: 'Makori East' },
+    { name: 'Tolang Wast Well-1',   lat: 33.532068, lon: 71.638509, region: 'Tolang' },
+    { name: 'Tolang East Well-1',   lat: 33.532068, lon: 71.638509, region: 'Tolang' },
   ];
 
-  // Filter wells based on search
+  // Merge predefined + any externally saved wells (deduplicate by name)
+  const allWells = [
+    ...predefinedWells,
+    ...(savedWells || []).filter(
+      (sw) => !predefinedWells.some((pw) => pw.name === sw.name)
+    ),
+  ];
+
+  // ─── Proximity check — finds ALL wells within 5 km, sorted by distance ──────
+  useEffect(() => {
+    if (isWell) { setWellsInRange([]); return; }
+
+    const lat = parseFloat(form.lat);
+    const lon = parseFloat(form.lon);
+
+    if (isNaN(lat) || isNaN(lon)) { setWellsInRange([]); return; }
+
+    const inRange = allWells
+      .map((w) => ({ ...w, distance: haversineKm(lat, lon, w.lat, w.lon) }))
+      .filter((w) => w.distance <= 5)
+      .sort((a, b) => a.distance - b.distance);
+
+    setWellsInRange(inRange);
+  }, [form.lat, form.lon, isWell, savedWells]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ─── Dropdown: filter + group ──────────────────────────────────────────────
   const filteredWells = predefinedWells.filter(
     (well) =>
       well.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       well.region.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // Group wells by region
   const groupedWells = filteredWells.reduce((groups, well) => {
     if (!groups[well.region]) groups[well.region] = [];
     groups[well.region].push(well);
     return groups;
   }, {});
 
-  // Auto-expand when there are errors
+  // ─── Auto-expand on error ──────────────────────────────────────────────────
   useEffect(() => {
-    if ((nameError || coordError) && !isExpanded) {
-      setIsExpanded(true);
-    }
+    if ((nameError || coordError) && !isExpanded) setIsExpanded(true);
   }, [nameError, coordError, isExpanded]);
 
-  // Auto-focus search when dropdown opens
+  // ─── Dropdown: auto-focus search ──────────────────────────────────────────
   useEffect(() => {
-    if (showPredefined && searchInputRef.current) {
+    if (showPredefined && searchInputRef.current)
       setTimeout(() => searchInputRef.current?.focus(), 50);
-    }
   }, [showPredefined]);
 
-  // Close dropdown when clicking outside
+  // ─── Dropdown: close on outside click ─────────────────────────────────────
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (showPredefined && dropdownRef.current && !dropdownRef.current.contains(e.target)) {
@@ -92,7 +131,7 @@ export default function CoordinateForm({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [showPredefined]);
 
-  // Close dropdown on Escape
+  // ─── Dropdown: close on Escape ────────────────────────────────────────────
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.key === 'Escape' && showPredefined) {
@@ -112,6 +151,9 @@ export default function CoordinateForm({
     setSearchTerm('');
   };
 
+  // ─── Helpers ──────────────────────────────────────────────────────────────
+  const hasValidCoords = form.lat && form.lon && !coordError;
+
   const inputClass = (hasError) => `
     w-full px-3 py-2.5 rounded-lg font-mono text-sm
     border transition-all duration-200 outline-none
@@ -124,6 +166,7 @@ export default function CoordinateForm({
     }
   `;
 
+  // ─── Render ────────────────────────────────────────────────────────────────
   return (
     <div
       className={`
@@ -223,7 +266,6 @@ export default function CoordinateForm({
                 `}
               >
                 <RiDatabase2Line className="text-sm flex-shrink-0" />
-                {/* Label: full on sm+, icon-only on xs */}
                 <span className="hidden xs:inline sm:hidden">Wells</span>
                 <span className="hidden sm:inline">Predefined Wells</span>
                 <RiArrowDownSLine
@@ -342,7 +384,6 @@ export default function CoordinateForm({
               `}
             >
               <span aria-hidden="true">+</span>
-              {/* Full label on sm+, short on xs */}
               <span className="hidden xs:inline sm:hidden">Save</span>
               <span className="hidden sm:inline">Save Well</span>
             </button>
@@ -362,7 +403,7 @@ export default function CoordinateForm({
       >
         <div className="p-3 sm:p-4 space-y-3 sm:space-y-4">
 
-          {/* Name field */}
+          {/* ── Name field ── */}
           <div>
             <label
               className={`block text-xs font-semibold mb-1.5 ${darkMode ? 'text-well-300' : 'text-stone-600'}`}
@@ -384,7 +425,7 @@ export default function CoordinateForm({
             )}
           </div>
 
-          {/* Lat / Lon — stacked on xs, side-by-side on sm+ */}
+          {/* ── Lat / Lon ── */}
           <div className="grid grid-cols-1 xs:grid-cols-2 gap-3 sm:gap-4">
             <div>
               <label
@@ -426,8 +467,8 @@ export default function CoordinateForm({
             </div>
           )}
 
-          {/* Coordinate preview */}
-          {form.lat && form.lon && !coordError && (
+          {/* ── Coordinate preview ── */}
+          {hasValidCoords && (
             <div
               className={`
                 px-3 py-2.5 rounded-lg font-mono text-xs
@@ -446,6 +487,148 @@ export default function CoordinateForm({
               </div>
             </div>
           )}
+
+          {/* ── Well Proximity Banner (home only) ── */}
+          {!isWell && hasValidCoords && (
+            <>
+              {wellsInRange.length > 0 ? (
+                /* ✅ One or more wells within 5 km */
+                <div
+                  className={`
+                    rounded-xl border overflow-hidden
+                    transition-all duration-300 animate-fade-in
+                    ${darkMode
+                      ? 'bg-emerald-500/5 border-emerald-500/25'
+                      : 'bg-emerald-50 border-emerald-200'
+                    }
+                  `}
+                >
+                  {/* Header */}
+                  <div
+                    className={`
+                      flex items-center gap-2 px-3 py-2 border-b
+                      ${darkMode ? 'border-emerald-500/20 bg-emerald-500/10' : 'border-emerald-200 bg-emerald-100/60'}
+                    `}
+                  >
+                    {/* Pulsing radar icon */}
+                    <div className="relative flex-shrink-0">
+                      <RiRadarLine
+                        className={`text-base ${darkMode ? 'text-emerald-400' : 'text-emerald-600'}`}
+                      />
+                      <span
+                        className={`
+                          absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full animate-ping
+                          ${darkMode ? 'bg-emerald-400' : 'bg-emerald-500'}
+                        `}
+                      />
+                      <span
+                        className={`
+                          absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full
+                          ${darkMode ? 'bg-emerald-400' : 'bg-emerald-500'}
+                        `}
+                      />
+                    </div>
+                    <p className={`text-xs font-semibold ${darkMode ? 'text-emerald-300' : 'text-emerald-700'}`}>
+                      Home lies within{' '}
+                      <span className={`font-bold ${darkMode ? 'text-emerald-200' : 'text-emerald-800'}`}>
+                        {wellsInRange.length} well{wellsInRange.length > 1 ? 's' : ''}
+                      </span>{' '}
+                      radius
+                    </p>
+                  </div>
+
+                  {/* Wells list */}
+                  <div className="divide-y divide-emerald-500/10">
+                    {wellsInRange.map((well, idx) => (
+                      <div
+                        key={well.name}
+                        className={`
+                          flex items-center gap-3 px-3 py-2.5
+                          ${darkMode ? 'hover:bg-emerald-500/5' : 'hover:bg-emerald-100/50'}
+                          transition-colors duration-150
+                        `}
+                      >
+                        {/* Rank badge */}
+                        <span
+                          className={`
+                            w-5 h-5 rounded-full flex items-center justify-center
+                            text-xs font-bold flex-shrink-0
+                            ${idx === 0
+                              ? darkMode
+                                ? 'bg-emerald-500/30 text-emerald-300'
+                                : 'bg-emerald-500 text-white'
+                              : darkMode
+                                ? 'bg-well-700 text-well-400'
+                                : 'bg-stone-200 text-stone-500'
+                            }
+                          `}
+                        >
+                          {idx + 1}
+                        </span>
+
+                        {/* Well info */}
+                        <div className="min-w-0 flex-1">
+                          <p
+                            className={`
+                              text-xs font-semibold truncate
+                              ${idx === 0
+                                ? darkMode ? 'text-emerald-300' : 'text-emerald-700'
+                                : darkMode ? 'text-well-200' : 'text-stone-700'
+                              }
+                            `}
+                          >
+                            {well.name}
+                          </p>
+                          {well.region && (
+                            <p className={`text-xs truncate ${darkMode ? 'text-well-500' : 'text-stone-400'}`}>
+                              {well.region}
+                            </p>
+                          )}
+                        </div>
+
+                        {/* Distance badge */}
+                        <span
+                          className={`
+                            font-mono text-xs px-2 py-0.5 rounded-full flex-shrink-0
+                            ${idx === 0
+                              ? darkMode
+                                ? 'bg-emerald-500/20 text-emerald-300'
+                                : 'bg-emerald-100 text-emerald-700'
+                              : darkMode
+                                ? 'bg-well-800 text-well-400'
+                                : 'bg-stone-100 text-stone-500'
+                            }
+                          `}
+                        >
+                          {well.distance.toFixed(2)} km
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                /* ❌ No well within 5 km */
+                <div
+                  className={`
+                    flex items-center gap-2.5 px-3 py-2.5 rounded-xl border
+                    transition-all duration-300 animate-fade-in
+                    ${darkMode
+                      ? 'bg-well-800/40 border-well-700'
+                      : 'bg-stone-50 border-stone-200'
+                    }
+                  `}
+                >
+                  <RiSignalWifiErrorLine
+                    className={`text-base flex-shrink-0 ${darkMode ? 'text-well-500' : 'text-stone-400'}`}
+                  />
+                  <p className={`text-xs ${darkMode ? 'text-well-500' : 'text-stone-400'}`}>
+                    No well within 5 km radius
+                  </p>
+                </div>
+              )}
+            </>
+          )}
+
         </div>
       </div>
     </div>
