@@ -153,7 +153,7 @@ export default function Sidebar({ activeTab, setActiveTab, darkMode, onClose }) 
       {/* Version info */}
       <div className={`px-5 py-4 border-t flex-shrink-0 ${darkMode ? 'border-well-800' : 'border-stone-200'}`}>
         <p className={`text-xs font-mono ${darkMode ? 'text-well-600' : 'text-stone-400'}`}>
-          v1.0.0 · GeoWell Pro
+           Syed M Jawad H 
         </p>
         <p className={`text-xs font-body mt-0.5 ${darkMode ? 'text-well-600' : 'text-stone-400'}`}>
           Oil &amp; Gas · Water Mgmt · Survey
