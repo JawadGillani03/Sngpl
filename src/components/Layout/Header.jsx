@@ -29,12 +29,12 @@ export default function Header({
 
   return (
     <header className={`
-      flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 px-4 sm:px-6 py-4 border-b flex-shrink-0
+      flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 px-4 sm:px-6 py-4 border-b flex-shrink-0
       ${darkMode ? 'bg-well-950 border-well-800' : 'bg-white border-stone-200'}
     `}>
       {/* Page title */}
       <div className="animate-fade-up">
-        <h2 className={`font-display font-bold text-lg sm:text-xl ${darkMode ? 'text-white' : 'text-well-900'}`}>
+        <h2 className={`pt-10 font-display font-bold text-lg sm:text-xl ${darkMode ? 'text-white' : 'text-well-900'}`}>
           {page.title}
         </h2>
         <p className={`font-body text-xs sm:text-sm mt-0.5 ${darkMode ? 'text-well-400' : 'text-stone-500'}`}>

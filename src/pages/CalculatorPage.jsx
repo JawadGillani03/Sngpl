@@ -2,13 +2,22 @@
  * CalculatorPage
  * Main analysis page: coordinate input forms + map + result card
  * Fully responsive across mobile, tablet, and desktop
+ *
+ * FIX: Calculate button moved outside the left panel so it is always
+ * visible on mobile regardless of which tab (form/map) is active.
+ * On desktop (lg+) it stays inside the left sidebar as before.
  */
 
 import React, { useState } from 'react';
 import CoordinateForm from '../components/Forms/CoordinateForm';
 import ProximityMap from '../components/Map/ProximityMap';
 import ResultCard from '../components/UI/ResultCard';
-import { RiFlashlightLine, RiTestTubeLine, RiMapPin2Line, RiEdit2Line } from 'react-icons/ri';
+import {
+  RiFlashlightLine,
+  RiTestTubeLine,
+  RiMapPin2Line,
+  RiEdit2Line,
+} from 'react-icons/ri';
 
 export default function CalculatorPage({
   wellForm,
@@ -22,17 +31,37 @@ export default function CalculatorPage({
   saveWell,
   darkMode,
 }) {
-  // Mobile: track which tab is active — 'form' or 'map'
   const [mobileTab, setMobileTab] = useState('form');
 
-  return (
-    <div className="flex flex-col h-full min-h-0 w-full">
+  const CalculateButton = () => (
+    <button
+      onClick={calculate}
+      className={`
+        w-full flex items-center justify-center gap-2 sm:gap-2.5
+        px-4 py-3 sm:py-3.5 rounded-xl
+        font-display font-bold text-sm text-white
+        bg-petroleum-600 hover:bg-petroleum-500
+        shadow-petroleum transition-all duration-200
+        active:scale-[0.98] focus:outline-none
+        focus:ring-2 focus:ring-petroleum-400 focus:ring-offset-2
+      `}
+    >
+      <RiFlashlightLine className="text-base sm:text-lg" />
+      Calculate Proximity
+    </button>
+  );
 
-      {/* ── Mobile tab bar (visible only on < lg) ── */}
+  return (
+    <div className="flex  flex-col h-full min-h-0 w-full">
+
+      {/* ── Mobile tab switcher (< lg only) ── */}
       <div
         className={`
           flex lg:hidden sticky top-0 z-10 rounded-xl mb-3 p-1
-          ${darkMode ? 'bg-well-900/80 backdrop-blur' : 'bg-stone-100 backdrop-blur'}
+          ${darkMode
+            ? 'bg-well-900/90 backdrop-blur-sm'
+            : 'bg-stone-100/90 backdrop-blur-sm'
+          }
         `}
       >
         <button
@@ -41,9 +70,7 @@ export default function CalculatorPage({
             flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg
             text-xs font-medium font-body transition-all duration-200
             ${mobileTab === 'form'
-              ? darkMode
-                ? 'bg-petroleum-600 text-white shadow-sm'
-                : 'bg-petroleum-600 text-white shadow-sm'
+              ? 'bg-petroleum-600 text-white shadow-sm'
               : darkMode
                 ? 'text-well-400 hover:text-well-200'
                 : 'text-stone-500 hover:text-stone-700'
@@ -60,9 +87,7 @@ export default function CalculatorPage({
             flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg
             text-xs font-medium font-body transition-all duration-200
             ${mobileTab === 'map'
-              ? darkMode
-                ? 'bg-petroleum-600 text-white shadow-sm'
-                : 'bg-petroleum-600 text-white shadow-sm'
+              ? 'bg-petroleum-600 text-white shadow-sm'
               : darkMode
                 ? 'text-well-400 hover:text-well-200'
                 : 'text-stone-500 hover:text-stone-700'
@@ -74,25 +99,26 @@ export default function CalculatorPage({
         </button>
       </div>
 
+      {/* ── Calculate button — MOBILE ONLY, always visible ──────────────────
+          Rendered outside both panels so it shows on BOTH the form tab
+          and the map tab. Hidden on lg+ where it lives inside the sidebar. */}
+      <div className="lg:hidden mb-3">
+        <CalculateButton />
+      </div>
+
       {/* ── Main content area ── */}
       <div className="flex flex-col lg:flex-row gap-4 lg:gap-5 flex-1 min-h-0">
 
-        {/* ── LEFT PANEL: Forms ──
-            • Mobile:  hidden when map tab active, full-width when form tab active
-            • Tablet (md): always visible, narrower layout in a grid
-            • Desktop (lg+): fixed-width sidebar */}
+        {/* ── LEFT PANEL: Forms ── */}
         <div
           className={`
             w-full lg:w-[420px] xl:w-[460px] 2xl:w-[500px]
-            lg:flex-shrink-0 flex flex-col gap-3 sm:gap-4
+            lg:flex-shrink-0 lg:max-h-full flex flex-col gap-3 sm:gap-4
             lg:overflow-y-auto lg:pr-1
-
-            ${/* Mobile visibility toggle */
-              mobileTab === 'map' ? 'hidden lg:flex' : 'flex'
-            }
+            ${mobileTab === 'map' ? 'hidden lg:flex' : 'flex'}
           `}
         >
-          {/* Load example button */}
+          {/* Load example */}
           <button
             onClick={loadExample}
             className={`
@@ -108,9 +134,8 @@ export default function CalculatorPage({
             <span>Load Example Data</span>
           </button>
 
-          {/* Forms: stacked on mobile, optional 2-col on md if space allows */}
-          <div className="flex flex-col gap-3 sm:gap-4 md:grid md:grid-cols-2 lg:flex lg:flex-col">
-            {/* Well form */}
+          {/* Well + Home forms */}
+          <div className="flex pb-20 flex-col gap-3 sm:gap-4 md:grid md:grid-cols-2 lg:flex lg:flex-col">
             <CoordinateForm
               type="well"
               form={wellForm}
@@ -119,8 +144,6 @@ export default function CalculatorPage({
               darkMode={darkMode}
               onSaveWell={saveWell}
             />
-
-            {/* Home form */}
             <CoordinateForm
               type="home"
               form={homeForm}
@@ -130,21 +153,10 @@ export default function CalculatorPage({
             />
           </div>
 
-          {/* Calculate button */}
-          <button
-            onClick={calculate}
-            className={`
-              w-full flex items-center justify-center gap-2 sm:gap-2.5
-              px-4 py-3 sm:py-3.5 rounded-xl
-              font-display font-bold text-sm text-white
-              bg-petroleum-600 hover:bg-petroleum-500
-              shadow-petroleum transition-all duration-200
-              active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-petroleum-400 focus:ring-offset-2
-            `}
-          >
-            <RiFlashlightLine className="text-base sm:text-lg" />
-            Calculate Proximity
-          </button>
+          {/* Calculate button — desktop sidebar only */}
+          <div className="hidden lg:block">
+            <CalculateButton />
+          </div>
 
           {/* Result card — desktop sidebar only */}
           {result && (
@@ -154,21 +166,14 @@ export default function CalculatorPage({
           )}
         </div>
 
-        {/* ── RIGHT PANEL: Map ──
-            • Mobile:  full-width, shown when map tab active
-            • Tablet:  full-width below forms (both always visible)
-            • Desktop: flex-1 alongside sidebar */}
+        {/* ── RIGHT PANEL: Map ── */}
         <div
           className={`
             flex-1 min-w-0 flex flex-col min-h-0
-
-            ${/* Mobile visibility toggle */
-              mobileTab === 'form' ? 'hidden lg:flex' : 'flex'
-            }
+            ${mobileTab === 'form' ? 'hidden lg:flex' : 'flex'}
           `}
         >
-          {/* Map — fills remaining height */}
-          <div className="flex-1 min-h-[240px] sm:min-h-[320px] md:min-h-[400px] lg:min-h-0">
+          <div className="flex-1 min-h-[200px] sm:min-h-[300px] md:min-h-[380px] lg:min-h-0">
             <ProximityMap result={result} darkMode={darkMode} />
           </div>
 

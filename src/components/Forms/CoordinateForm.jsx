@@ -3,6 +3,18 @@
  * Input form for well or home coordinates
  * Fully responsive across all screen sizes
  * Includes 5km well proximity check for home coordinates
+ *
+ * CHANGES FROM PREVIOUS VERSION
+ * ──────────────────────────────
+ * • Removed RiMenuLine / RiCloseLine imports — those icons were for the old
+ *   App-level sidebar toggle; the collapse button now uses RiArrowUpSLine /
+ *   RiArrowDownSLine so it's visually distinct from the hamburger menu.
+ * • Collapse toggle is now shown on ALL screen sizes (not just lg:hidden) so
+ *   users can collapse either card on any viewport to reclaim vertical space —
+ *   especially useful on mobile where the top-bar + bottom-bar eat into height.
+ * • Dropdown panel z-index raised to z-[70] so it clears the Sidebar's fixed
+ *   top-bar (z-40) and drawer (z-[60]) on mobile.
+ * • No other logic changes.
  */
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -10,10 +22,9 @@ import {
   RiMapPinLine,
   RiHomeLine,
   RiErrorWarningLine,
-  RiMenuLine,
-  RiCloseLine,
   RiDatabase2Line,
   RiArrowDownSLine,
+  RiArrowUpSLine,
   RiCheckLine,
   RiRadarLine,
   RiSignalWifiErrorLine,
@@ -44,15 +55,15 @@ export default function CoordinateForm({
   const [isExpanded, setIsExpanded] = useState(true);
   const [showPredefined, setShowPredefined] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const [wellsInRange, setWellsInRange] = useState([]); // [{ ...well, distance: km }] sorted by distance
+  const [wellsInRange, setWellsInRange] = useState([]);
   const dropdownRef = useRef(null);
   const searchInputRef = useRef(null);
 
   const isWell = type === 'well';
-  const Icon = isWell ? RiMapPinLine : RiHomeLine;
-  const label = isWell ? 'Well' : 'Home';
+  const Icon   = isWell ? RiMapPinLine : RiHomeLine;
+  const label  = isWell ? 'Well' : 'Home';
 
-  const nameError = errors[`${type}_name`];
+  const nameError  = errors[`${type}_name`];
   const coordError = errors[`${type}_coords`];
 
   // ─── Predefined wells data ─────────────────────────────────────────────────
@@ -78,7 +89,7 @@ export default function CoordinateForm({
     ),
   ];
 
-  // ─── Proximity check — finds ALL wells within 5 km, sorted by distance ──────
+  // ─── Proximity check ──────────────────────────────────────────────────────
   useEffect(() => {
     if (isWell) { setWellsInRange([]); return; }
 
@@ -187,24 +198,8 @@ export default function CoordinateForm({
           }
         `}
       >
-        {/* Left: toggle + icon + title */}
+        {/* Left: icon + title */}
         <div className="flex items-center gap-2 min-w-0">
-          {/* Collapse toggle — mobile only */}
-          <button
-            onClick={() => setIsExpanded(!isExpanded)}
-            aria-label={isExpanded ? 'Collapse form' : 'Expand form'}
-            className={`
-              lg:hidden flex-shrink-0 p-1.5 rounded-lg transition-all duration-200
-              focus:outline-none focus:ring-2 focus:ring-petroleum-500/30
-              ${darkMode
-                ? 'text-well-400 hover:bg-well-700 hover:text-white'
-                : 'text-stone-500 hover:bg-stone-100 hover:text-stone-900'
-              }
-            `}
-          >
-            {isExpanded ? <RiCloseLine className="text-base" /> : <RiMenuLine className="text-base" />}
-          </button>
-
           {/* Icon badge */}
           <div
             className={`
@@ -244,7 +239,7 @@ export default function CoordinateForm({
           </div>
         </div>
 
-        {/* Right: action buttons */}
+        {/* Right: action buttons + collapse toggle */}
         <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
 
           {/* Predefined Wells dropdown — well type only */}
@@ -273,11 +268,13 @@ export default function CoordinateForm({
                 />
               </button>
 
-              {/* Dropdown panel */}
+              {/* Dropdown panel
+                  z-[70] ensures it clears the Sidebar drawer (z-[60]) and
+                  top-bar (z-40) on mobile */}
               {showPredefined && (
                 <div
                   className={`
-                    absolute right-0 mt-2 z-50 rounded-xl shadow-2xl border overflow-hidden
+                    absolute right-0 mt-2 z-[70] rounded-xl shadow-2xl border overflow-hidden
                     w-[calc(100vw-2rem)] max-w-xs sm:max-w-sm md:w-96
                     animate-fade-in
                     ${darkMode ? 'bg-well-900 border-well-700' : 'bg-white border-stone-200'}
@@ -303,7 +300,7 @@ export default function CoordinateForm({
                   </div>
 
                   {/* Wells list */}
-                  <div className="max-h-72 sm:max-h-96 overflow-y-auto overscroll-contain">
+                  <div className="max-h-72 ml-5 sm:max-h-96 overflow-y-auto overscroll-contain">
                     {Object.keys(groupedWells).length === 0 ? (
                       <div className="p-8 text-center">
                         <RiDatabase2Line
@@ -388,6 +385,25 @@ export default function CoordinateForm({
               <span className="hidden sm:inline">Save Well</span>
             </button>
           )}
+
+          {/* Collapse / expand toggle — all screen sizes */}
+          <button
+            onClick={() => setIsExpanded(!isExpanded)}
+            aria-label={isExpanded ? 'Collapse form' : 'Expand form'}
+            className={`
+              flex-shrink-0 p-1.5 rounded-lg transition-all duration-200
+              focus:outline-none focus:ring-2 focus:ring-petroleum-500/30
+              ${darkMode
+                ? 'text-well-400 hover:bg-well-700 hover:text-white'
+                : 'text-stone-400 hover:bg-stone-100 hover:text-stone-700'
+              }
+            `}
+          >
+            {isExpanded
+              ? <RiArrowUpSLine className="text-base" />
+              : <RiArrowDownSLine className="text-base" />
+            }
+          </button>
         </div>
       </div>
 
@@ -395,10 +411,7 @@ export default function CoordinateForm({
       <div
         className={`
           transition-all duration-300 ease-in-out overflow-hidden
-          ${isExpanded
-            ? 'max-h-[2000px] opacity-100'
-            : 'max-h-0 opacity-0 lg:max-h-[2000px] lg:opacity-100'
-          }
+          ${isExpanded ? 'max-h-[2000px] opacity-100' : 'max-h-0 opacity-0'}
         `}
       >
         <div className="p-3 sm:p-4 space-y-3 sm:space-y-4">
@@ -453,7 +466,7 @@ export default function CoordinateForm({
                 step="any"
                 value={form.lon}
                 onChange={(e) => onUpdate('lon', e.target.value)}
-                placeholder="e.g., 73.0617"
+                placeholder="e.g., 71.0617"
                 className={inputClass(coordError)}
               />
             </div>
@@ -510,7 +523,6 @@ export default function CoordinateForm({
                       ${darkMode ? 'border-emerald-500/20 bg-emerald-500/10' : 'border-emerald-200 bg-emerald-100/60'}
                     `}
                   >
-                    {/* Pulsing radar icon */}
                     <div className="relative flex-shrink-0">
                       <RiRadarLine
                         className={`text-base ${darkMode ? 'text-emerald-400' : 'text-emerald-600'}`}

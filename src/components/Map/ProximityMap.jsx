@@ -1,7 +1,7 @@
 /**
- * ProximityMap Component
+ * ProximityMap Component — Satellite Edition
  * Interactive Leaflet map showing well, home, and 5km radius circle
- * Uses OpenStreetMap tiles
+ * Uses Esri World Imagery (satellite) tiles with an optional labels overlay
  * Fully responsive across all screen sizes
  */
 
@@ -116,18 +116,34 @@ export default function ProximityMap({ result, darkMode }) {
   // Default center: Pakistan (demo data region)
   const defaultCenter = [33.5731, 73.0617];
 
-  const well  = result?.well;
-  const home  = result?.home;
+  const well     = result?.well;
+  const home     = result?.home;
   const isInside = result?.isInside;
 
   // Circle stroke colour based on proximity status
   const circleColor =
     isInside === undefined ? '#0ea5e9' : isInside ? '#10b981' : '#ef4444';
 
-  // Remount map when dark mode changes (tile URL changes)
+  // Remount map when dark mode changes
   useEffect(() => {
     setMapKey(Date.now());
   }, [darkMode]);
+
+  // ── Satellite tile sources ──────────────────────────────────────────────
+  //
+  // Base layer  : Esri World Imagery (satellite photos, no labels)
+  // Labels layer: Esri World Boundaries & Places (roads, city names, etc.)
+  //               Rendered on top so place names are always readable.
+  //
+  // Both layers are free for non-commercial use; Esri requires attribution.
+  // ────────────────────────────────────────────────────────────────────────
+  const SATELLITE_URL =
+    'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
+  const SATELLITE_ATTRIBUTION =
+    'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community';
+
+  const LABELS_URL =
+    'https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}';
 
   return (
     <div
@@ -135,11 +151,6 @@ export default function ProximityMap({ result, darkMode }) {
         relative rounded-xl overflow-hidden border flex-1 min-h-0 w-full
         ${darkMode ? 'border-well-700' : 'border-stone-200'}
       `}
-      /* Responsive min-height:
-         xs phones  → 260px
-         sm tablets → 340px
-         md+        → 400px
-         On lg+ the flex-1 takes over and fills remaining height */
       style={{ minHeight: 'clamp(260px, 45vw, 400px)', height: '100%' }}
     >
       {/* ── Map source label (top-left) ── */}
@@ -157,8 +168,8 @@ export default function ProximityMap({ result, darkMode }) {
       >
         <span className="w-1.5 h-1.5 rounded-full bg-petroleum-500 animate-pulse-slow flex-shrink-0" />
         {/* Full label on sm+, abbreviation on xs */}
-        <span className="hidden xs:inline">OpenStreetMap</span>
-        <span className="xs:hidden">OSM</span>
+        <span className="hidden xs:inline">Satellite (Esri)</span>
+        <span className="xs:hidden">SAT</span>
       </div>
 
       {/* ── Legend (bottom-left) ── */}
@@ -214,14 +225,20 @@ export default function ProximityMap({ result, darkMode }) {
       >
         <MapResizeHandler />
 
-        {/* Tile layer — dark/light variant */}
+        {/* ── Satellite base layer ── */}
         <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-          url={
-            darkMode
-              ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
-              : 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
-          }
+          attribution={SATELLITE_ATTRIBUTION}
+          url={SATELLITE_URL}
+          maxZoom={19}
+        />
+
+        {/* ── Place-name / road labels overlay ── */}
+        <TileLayer
+          url={LABELS_URL}
+          maxZoom={19}
+          opacity={0.85}
+          /* No extra attribution needed; Esri covers both layers above */
+          attribution=""
         />
 
         {/* Auto-zoom */}

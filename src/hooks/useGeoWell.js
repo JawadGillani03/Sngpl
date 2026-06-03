@@ -191,14 +191,14 @@ export function useGeoWell() {
   // ── Load example data ─────────────────────────────────────────────────────
   const loadExample = useCallback(() => {
     setWellForm({
-      name: 'Alpha-7 Petroleum Well',
+      name: ' Well',
       lat: '33.5731',
-      lon: '73.0617',
+      lon: '71.0617',
     });
     setHomeForm({
-      name: 'Residence Alpha',
+      name: 'Residence',
       lat: '33.5950',
-      lon: '73.0480',
+      lon: '71.0480',
     });
     setResult(null);
     setErrors({});
