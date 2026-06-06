@@ -42,7 +42,7 @@ const MAP_STYLES = [
     icon: '🛰️',
     base: {
       url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-      attribution: 'Tiles © Esri — Source: Esri, Maxar, Earthstar Geographics',
+      attribution: '',
       maxZoom: 19,
     },
     labels: {
@@ -59,7 +59,7 @@ const MAP_STYLES = [
     icon: '🗺️',
     base: {
       url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-      attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+      attribution: '',
       maxZoom: 19,
     },
     labels: null,
@@ -72,7 +72,7 @@ const MAP_STYLES = [
     icon: '⛰️',
     base: {
       url: 'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',
-      attribution: '© <a href="https://opentopomap.org">OpenTopoMap</a> contributors',
+      attribution: '',
       maxZoom: 17,
     },
     labels: null,
@@ -85,7 +85,7 @@ const MAP_STYLES = [
     icon: '🏔️',
     base: {
       url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Shaded_Relief/MapServer/tile/{z}/{y}/{x}',
-      attribution: 'Tiles © Esri — Source: Esri',
+      attribution: '',
       maxZoom: 13,
     },
     labels: {
@@ -102,7 +102,7 @@ const MAP_STYLES = [
     icon: '🌑',
     base: {
       url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
-      attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors © <a href="https://carto.com/attributions">CARTO</a>',
+      attribution: '',
       maxZoom: 19,
     },
     labels: null,
@@ -115,7 +115,7 @@ const MAP_STYLES = [
     icon: '☀️',
     base: {
       url: 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
-      attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors © <a href="https://carto.com/attributions">CARTO</a>',
+      attribution: '',
       maxZoom: 19,
     },
     labels: null,
