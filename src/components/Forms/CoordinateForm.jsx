@@ -274,7 +274,7 @@ export default function CoordinateForm({
               {showPredefined && (
                 <div
                   className={`
-                    absolute right-0 mt-2 z-[70] rounded-xl shadow-2xl border overflow-hidden
+                    absolute -right-1/2 mt-2 z-[70] rounded-xl shadow-2xl border overflow-hidden
                     w-[calc(100vw-2rem)] max-w-xs sm:max-w-sm md:w-96
                     animate-fade-in
                     ${darkMode ? 'bg-well-900 border-well-700' : 'bg-white border-stone-200'}

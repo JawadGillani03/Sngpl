@@ -1,7 +1,7 @@
 /**
- * ProximityMap Component — Satellite Edition
+ * ProximityMap Component — Multi-Style Edition
  * Interactive Leaflet map showing well, home, and 5km radius circle
- * Uses Esri World Imagery (satellite) tiles with an optional labels overlay
+ * Supports multiple tile layer styles selectable by the user
  * Fully responsive across all screen sizes
  */
 
@@ -28,6 +28,100 @@ L.Icon.Default.mergeOptions({
   shadowUrl:
     'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
 });
+
+// ── Map style definitions ──────────────────────────────────────────────────
+//
+// Each style has a base tile layer; some have an optional labels overlay.
+// Icons are simple emoji for zero-dependency rendering.
+// ──────────────────────────────────────────────────────────────────────────
+const MAP_STYLES = [
+  {
+    id: 'satellite',
+    label: 'Satellite',
+    shortLabel: 'SAT',
+    icon: '🛰️',
+    base: {
+      url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+      attribution: 'Tiles © Esri — Source: Esri, Maxar, Earthstar Geographics',
+      maxZoom: 19,
+    },
+    labels: {
+      url: 'https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}',
+      opacity: 0.85,
+      maxZoom: 19,
+    },
+    accentColor: '#0ea5e9',
+  },
+  {
+    id: 'street',
+    label: 'Street',
+    shortLabel: 'STR',
+    icon: '🗺️',
+    base: {
+      url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+      attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+      maxZoom: 19,
+    },
+    labels: null,
+    accentColor: '#3b82f6',
+  },
+  {
+    id: 'topo',
+    label: 'Topo',
+    shortLabel: 'TOPO',
+    icon: '⛰️',
+    base: {
+      url: 'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',
+      attribution: '© <a href="https://opentopomap.org">OpenTopoMap</a> contributors',
+      maxZoom: 17,
+    },
+    labels: null,
+    accentColor: '#84cc16',
+  },
+  {
+    id: 'terrain',
+    label: 'Terrain',
+    shortLabel: 'TER',
+    icon: '🏔️',
+    base: {
+      url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Shaded_Relief/MapServer/tile/{z}/{y}/{x}',
+      attribution: 'Tiles © Esri — Source: Esri',
+      maxZoom: 13,
+    },
+    labels: {
+      url: 'https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}',
+      opacity: 0.9,
+      maxZoom: 13,
+    },
+    accentColor: '#a78bfa',
+  },
+  {
+    id: 'dark',
+    label: 'Dark',
+    shortLabel: 'DRK',
+    icon: '🌑',
+    base: {
+      url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
+      attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors © <a href="https://carto.com/attributions">CARTO</a>',
+      maxZoom: 19,
+    },
+    labels: null,
+    accentColor: '#f472b6',
+  },
+  {
+    id: 'light',
+    label: 'Light',
+    shortLabel: 'LGT',
+    icon: '☀️',
+    base: {
+      url: 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
+      attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors © <a href="https://carto.com/attributions">CARTO</a>',
+      maxZoom: 19,
+    },
+    labels: null,
+    accentColor: '#f97316',
+  },
+];
 
 /**
  * Custom SVG marker icon factory
@@ -84,22 +178,17 @@ function MapController({ well, home }) {
 
 /**
  * Invalidates map size on window resize and on mount
- * Prevents grey tiles when the container changes dimensions
  */
 function MapResizeHandler() {
   const map = useMap();
 
   useEffect(() => {
     const handleResize = () => {
-      // Small delay lets CSS transitions finish first
       setTimeout(() => map.invalidateSize(), 150);
     };
-
     window.addEventListener('resize', handleResize);
-    // Also fire on orientation change (mobile)
     window.addEventListener('orientationchange', handleResize);
     handleResize();
-
     return () => {
       window.removeEventListener('resize', handleResize);
       window.removeEventListener('orientationchange', handleResize);
@@ -109,41 +198,110 @@ function MapResizeHandler() {
   return null;
 }
 
+/**
+ * Map Style Selector Panel
+ * Renders as a compact pill-row; collapses to a toggle button on very small screens.
+ */
+function MapStyleSelector({ styles, activeId, onChange, darkMode }) {
+  const [expanded, setExpanded] = useState(false);
+  const activeStyle = styles.find((s) => s.id === activeId);
+
+  return (
+    <div
+      className={`
+        absolute top-2 right-2 sm:top-3 sm:right-3 z-[999]
+        flex flex-col items-end gap-1
+      `}
+    >
+      {/* Toggle button (always visible on mobile, hidden on sm+ when expanded) */}
+      <button
+        onClick={() => setExpanded((v) => !v)}
+        className={`
+          sm:hidden
+          flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg backdrop-blur-sm
+          text-[10px] font-body font-semibold transition-all
+          ${darkMode
+            ? 'bg-well-900/90 text-well-200 border border-well-600 hover:border-well-400'
+            : 'bg-white/90 text-stone-700 border border-stone-300 hover:border-stone-400'
+          }
+        `}
+      >
+        <span>{activeStyle?.icon}</span>
+        <span>{activeStyle?.shortLabel}</span>
+        <span className="opacity-60">{expanded ? '▲' : '▼'}</span>
+      </button>
+
+      {/* Style buttons — always visible on sm+, toggle on mobile */}
+      <div
+        className={`
+          flex flex-col sm:flex-row gap-1
+          ${expanded ? 'flex' : 'hidden sm:flex'}
+        `}
+      >
+        {styles.map((style) => {
+          const isActive = style.id === activeId;
+          return (
+            <button
+              key={style.id}
+              onClick={() => {
+                onChange(style.id);
+                setExpanded(false);
+              }}
+              title={style.label}
+              className={`
+                flex items-center gap-1 sm:gap-1.5
+                px-2 py-1 sm:px-2.5 sm:py-1.5
+                rounded-lg backdrop-blur-sm
+                text-[9px] xs:text-[10px] sm:text-xs font-body font-medium
+                transition-all duration-150 cursor-pointer
+                ${isActive
+                  ? darkMode
+                    ? 'bg-petroleum-600/90 text-white border border-petroleum-400 shadow-md'
+                    : 'bg-petroleum-500/90 text-white border border-petroleum-400 shadow-md'
+                  : darkMode
+                    ? 'bg-well-900/80 text-well-300 border border-well-700 hover:border-well-500 hover:bg-well-800/80'
+                    : 'bg-white/80 text-stone-600 border border-stone-200 hover:border-stone-400 hover:bg-white/95'
+                }
+              `}
+            >
+              <span className="leading-none">{style.icon}</span>
+              {/* Show label text on sm+ only */}
+              <span className="hidden sm:inline">{style.label}</span>
+              {/* Show short label on mobile */}
+              <span className="sm:hidden">{style.shortLabel}</span>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 export default function ProximityMap({ result, darkMode }) {
+  const [activeStyleId, setActiveStyleId] = useState('satellite');
   const [mapKey, setMapKey] = useState(Date.now());
   const mapRef = useRef(null);
 
-  // Default center: Pakistan (demo data region)
   const defaultCenter = [33.5731, 73.0617];
 
   const well     = result?.well;
   const home     = result?.home;
   const isInside = result?.isInside;
 
-  // Circle stroke colour based on proximity status
-  const circleColor =
-    isInside === undefined ? '#0ea5e9' : isInside ? '#10b981' : '#ef4444';
+  const activeStyle = MAP_STYLES.find((s) => s.id === activeStyleId);
 
-  // Remount map when dark mode changes
+  const circleColor =
+    isInside === undefined
+      ? (activeStyle?.accentColor ?? '#0ea5e9')
+      : isInside
+        ? '#10b981'
+        : '#ef4444';
+
+  // Remount map when dark mode OR map style changes
+  // (remount is needed for some tile layers that don't hot-swap cleanly)
   useEffect(() => {
     setMapKey(Date.now());
-  }, [darkMode]);
-
-  // ── Satellite tile sources ──────────────────────────────────────────────
-  //
-  // Base layer  : Esri World Imagery (satellite photos, no labels)
-  // Labels layer: Esri World Boundaries & Places (roads, city names, etc.)
-  //               Rendered on top so place names are always readable.
-  //
-  // Both layers are free for non-commercial use; Esri requires attribution.
-  // ────────────────────────────────────────────────────────────────────────
-  const SATELLITE_URL =
-    'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
-  const SATELLITE_ATTRIBUTION =
-    'Satellite Imaging ';
-
-  const LABELS_URL =
-    'https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}';
+  }, [darkMode, activeStyleId]);
 
   return (
     <div
@@ -166,11 +324,21 @@ export default function ProximityMap({ result, darkMode }) {
           }
         `}
       >
-        <span className="w-1.5 h-1.5 rounded-full bg-petroleum-500 animate-pulse-slow flex-shrink-0" />
-        {/* Full label on sm+, abbreviation on xs */}
-        <span className="hidden xs:inline">Satellite (Esri)</span>
-        <span className="xs:hidden">SAT</span>
+        <span
+          className="w-1.5 h-1.5 rounded-full animate-pulse-slow flex-shrink-0"
+          style={{ backgroundColor: activeStyle?.accentColor ?? '#0ea5e9' }}
+        />
+        <span className="hidden xs:inline">{activeStyle?.label} View</span>
+        <span className="xs:hidden">{activeStyle?.shortLabel}</span>
       </div>
+
+      {/* ── Map style selector (top-right) ── */}
+      <MapStyleSelector
+        styles={MAP_STYLES}
+        activeId={activeStyleId}
+        onChange={setActiveStyleId}
+        darkMode={darkMode}
+      />
 
       {/* ── Legend (bottom-left) ── */}
       {result && (
@@ -186,7 +354,6 @@ export default function ProximityMap({ result, darkMode }) {
             }
           `}
         >
-          {/* Well + Home names */}
           <div className="flex flex-col gap-1">
             <div className="flex items-center gap-1.5 text-[9px] xs:text-[10px] sm:text-xs font-body">
               <span className="w-2 h-2 rounded-full bg-petroleum-500 flex-shrink-0" />
@@ -197,8 +364,6 @@ export default function ProximityMap({ result, darkMode }) {
               <span className="truncate">{home?.name}</span>
             </div>
           </div>
-
-          {/* Distance readout */}
           <div className="flex items-center gap-1.5 mt-1.5 text-[9px] xs:text-[10px] sm:text-xs font-mono">
             <span
               className={`
@@ -225,21 +390,24 @@ export default function ProximityMap({ result, darkMode }) {
       >
         <MapResizeHandler />
 
-        {/* ── Satellite base layer ── */}
+        {/* ── Active base tile layer ── */}
         <TileLayer
-          attribution={SATELLITE_ATTRIBUTION}
-          url={SATELLITE_URL}
-          maxZoom={19}
+          key={`base-${activeStyleId}`}
+          attribution={activeStyle?.base.attribution ?? ''}
+          url={activeStyle?.base.url ?? ''}
+          maxZoom={activeStyle?.base.maxZoom ?? 19}
         />
 
-        {/* ── Place-name / road labels overlay ── */}
-        <TileLayer
-          url={LABELS_URL}
-          maxZoom={19}
-          opacity={0.85}
-          /* No extra attribution needed; Esri covers both layers above */
-          attribution=""
-        />
+        {/* ── Optional labels overlay ── */}
+        {activeStyle?.labels && (
+          <TileLayer
+            key={`labels-${activeStyleId}`}
+            url={activeStyle.labels.url}
+            maxZoom={activeStyle.labels.maxZoom ?? 19}
+            opacity={activeStyle.labels.opacity ?? 0.85}
+            attribution=""
+          />
+        )}
 
         {/* Auto-zoom */}
         {well && <MapController well={well} home={home} />}
