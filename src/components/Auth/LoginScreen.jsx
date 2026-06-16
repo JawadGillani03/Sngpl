@@ -4,18 +4,22 @@
  * Hardcoded credentials — frontend only.
  *
  * Default credentials:
- *   ID:       Jawad Gillani
- *   Password: jawad174@
+ *   ID: Jawad Gillani   |  Password: jawad174@
+ *   ID: Waqar Hussain   |  Password: waqar174@
+ *   ID: Iftikhar Ahmad  |  Password: 9309@
  *
- * Change VALID_ID and VALID_PASSWORD below to update them.
+ * Add/change users in the VALID_USERS array below.
  */
 
 import React, { useState, useRef, useEffect } from 'react';
 import { RiDropFill, RiEyeLine, RiEyeOffLine, RiLockLine, RiUserLine, RiShieldLine } from 'react-icons/ri';
 
 // ── Hardcoded credentials — change these ──────────────────────────
-const VALID_ID       = 'Jawad Gillani';
-const VALID_PASSWORD = 'jawad174@';
+const VALID_USERS = [
+  { id: 'Jawad Gillani',  password: 'jawad174@' },
+  { id: 'Waqar Hussain',  password: 'waqar174@' },
+  { id: 'Iftikhar Ahmad', password: '9309@'     },
+];
 // ─────────────────────────────────────────────────────────────────
 
 export default function LoginScreen({ onLogin, darkMode }) {
@@ -27,7 +31,6 @@ export default function LoginScreen({ onLogin, darkMode }) {
   const [loading,      setLoading]      = useState(false);
   const idRef = useRef(null);
 
-  // Auto-focus the ID field on mount
   useEffect(() => { idRef.current?.focus(); }, []);
 
   const triggerShake = () => {
@@ -47,10 +50,13 @@ export default function LoginScreen({ onLogin, darkMode }) {
 
     setLoading(true);
 
-    // Simulate a brief auth delay for UX polish
     setTimeout(() => {
-      if (userId.trim() === VALID_ID && password === VALID_PASSWORD) {
-        onLogin();
+      const match = VALID_USERS.find(
+        (u) => u.id === userId.trim() && u.password === password
+      );
+
+      if (match) {
+        onLogin(match.id); // ← pass the user's name up
       } else {
         setLoading(false);
         setError('Invalid User ID or password. Please try again.');
@@ -86,20 +92,8 @@ export default function LoginScreen({ onLogin, darkMode }) {
     >
       {/* Background decoration */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none" aria-hidden="true">
-        {/* Large ambient glow */}
-        <div
-          className={`
-            absolute -top-40 -left-40 w-[500px] h-[500px] rounded-full blur-3xl opacity-20
-            ${darkMode ? 'bg-petroleum-600' : 'bg-petroleum-200'}
-          `}
-        />
-        <div
-          className={`
-            absolute -bottom-40 -right-40 w-[400px] h-[400px] rounded-full blur-3xl opacity-10
-            ${darkMode ? 'bg-amber-600' : 'bg-amber-200'}
-          `}
-        />
-        {/* Subtle grid pattern */}
+        <div className={`absolute -top-40 -left-40 w-[500px] h-[500px] rounded-full blur-3xl opacity-20 ${darkMode ? 'bg-petroleum-600' : 'bg-petroleum-200'}`} />
+        <div className={`absolute -bottom-40 -right-40 w-[400px] h-[400px] rounded-full blur-3xl opacity-10 ${darkMode ? 'bg-amber-600' : 'bg-amber-200'}`} />
         <div
           className="absolute inset-0 opacity-[0.03]"
           style={{
@@ -111,53 +105,22 @@ export default function LoginScreen({ onLogin, darkMode }) {
       </div>
 
       {/* Login card */}
-      <div
-        className={`
-          relative w-full max-w-sm
-          ${shaking ? 'animate-shake' : ''}
-        `}
-      >
-        <div
-          className={`
-            rounded-2xl border overflow-hidden shadow-2xl
-            ${darkMode
-              ? 'bg-well-900/90 border-well-800 backdrop-blur-xl'
-              : 'bg-white/90 border-stone-200 backdrop-blur-xl'
-            }
-          `}
-        >
+      <div className={`relative w-full max-w-sm ${shaking ? 'animate-shake' : ''}`}>
+        <div className={`rounded-2xl border overflow-hidden shadow-2xl ${darkMode ? 'bg-well-900/90 border-well-800 backdrop-blur-xl' : 'bg-white/90 border-stone-200 backdrop-blur-xl'}`}>
+
           {/* Card header */}
-          <div
-            className={`
-              px-6 pt-8 pb-6 text-center border-b
-              ${darkMode ? 'border-well-800' : 'border-stone-100'}
-            `}
-          >
-            {/* Logo */}
+          <div className={`px-6 pt-8 pb-6 text-center border-b ${darkMode ? 'border-well-800' : 'border-stone-100'}`}>
             <div className="flex justify-center mb-4">
               <div className="relative">
                 <div className="w-14 h-14 rounded-2xl bg-petroleum-600 flex items-center justify-center shadow-petroleum">
                   <RiDropFill className="text-white text-2xl" />
                 </div>
-                <span
-                  className={`
-                    absolute -top-1 -right-1 w-4 h-4 rounded-full
-                    flex items-center justify-center
-                    bg-emerald-400 border-2
-                    ${darkMode ? 'border-well-900' : 'border-white'}
-                  `}
-                >
+                <span className={`absolute -top-1 -right-1 w-4 h-4 rounded-full flex items-center justify-center bg-emerald-400 border-2 ${darkMode ? 'border-well-900' : 'border-white'}`}>
                   <RiShieldLine className="text-white text-[8px]" />
                 </span>
               </div>
             </div>
-
-            <h1
-              className={`
-                font-display font-bold text-xl sm:text-2xl
-                ${darkMode ? 'text-white' : 'text-well-900'}
-              `}
-            >
+            <h1 className={`font-display font-bold text-xl sm:text-2xl ${darkMode ? 'text-white' : 'text-well-900'}`}>
               GeoWell
             </h1>
             <p className={`font-body text-xs sm:text-sm mt-1 ${darkMode ? 'text-well-400' : 'text-stone-500'}`}>
@@ -166,26 +129,15 @@ export default function LoginScreen({ onLogin, darkMode }) {
           </div>
 
           {/* Form */}
-          <form
-            onSubmit={handleSubmit}
-            className="px-6 py-6 space-y-4"
-            noValidate
-          >
+          <form onSubmit={handleSubmit} className="px-6 py-6 space-y-4" noValidate>
+
             {/* User ID */}
             <div className="relative">
-              <label
-                htmlFor="login-id"
-                className={`block text-xs font-semibold mb-1.5 ${darkMode ? 'text-well-300' : 'text-stone-600'}`}
-              >
+              <label htmlFor="login-id" className={`block text-xs font-semibold mb-1.5 ${darkMode ? 'text-well-300' : 'text-stone-600'}`}>
                 User ID
               </label>
               <div className="relative">
-                <RiUserLine
-                  className={`
-                    absolute left-3 top-1/2 -translate-y-1/2 text-base pointer-events-none
-                    ${darkMode ? 'text-well-500' : 'text-stone-400'}
-                  `}
-                />
+                <RiUserLine className={`absolute left-3 top-1/2 -translate-y-1/2 text-base pointer-events-none ${darkMode ? 'text-well-500' : 'text-stone-400'}`} />
                 <input
                   id="login-id"
                   ref={idRef}
@@ -203,19 +155,11 @@ export default function LoginScreen({ onLogin, darkMode }) {
 
             {/* Password */}
             <div className="relative">
-              <label
-                htmlFor="login-pw"
-                className={`block text-xs font-semibold mb-1.5 ${darkMode ? 'text-well-300' : 'text-stone-600'}`}
-              >
+              <label htmlFor="login-pw" className={`block text-xs font-semibold mb-1.5 ${darkMode ? 'text-well-300' : 'text-stone-600'}`}>
                 Password
               </label>
               <div className="relative">
-                <RiLockLine
-                  className={`
-                    absolute left-3 top-1/2 -translate-y-1/2 text-base pointer-events-none
-                    ${darkMode ? 'text-well-500' : 'text-stone-400'}
-                  `}
-                />
+                <RiLockLine className={`absolute left-3 top-1/2 -translate-y-1/2 text-base pointer-events-none ${darkMode ? 'text-well-500' : 'text-stone-400'}`} />
                 <input
                   id="login-pw"
                   type={showPassword ? 'text' : 'password'}
@@ -231,19 +175,9 @@ export default function LoginScreen({ onLogin, darkMode }) {
                   type="button"
                   onClick={() => setShowPassword((v) => !v)}
                   aria-label={showPassword ? 'Hide password' : 'Show password'}
-                  className={`
-                    absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded
-                    transition-colors duration-150
-                    ${darkMode
-                      ? 'text-well-500 hover:text-well-200'
-                      : 'text-stone-400 hover:text-stone-700'
-                    }
-                  `}
+                  className={`absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded transition-colors duration-150 ${darkMode ? 'text-well-500 hover:text-well-200' : 'text-stone-400 hover:text-stone-700'}`}
                 >
-                  {showPassword
-                    ? <RiEyeOffLine className="text-base" />
-                    : <RiEyeLine    className="text-base" />
-                  }
+                  {showPassword ? <RiEyeOffLine className="text-base" /> : <RiEyeLine className="text-base" />}
                 </button>
               </div>
             </div>
@@ -251,13 +185,7 @@ export default function LoginScreen({ onLogin, darkMode }) {
             {/* Error message */}
             {error && (
               <div
-                className={`
-                  flex items-start gap-2 px-3 py-2.5 rounded-lg text-xs font-body
-                  ${darkMode
-                    ? 'bg-red-500/10 border border-red-500/20 text-red-400'
-                    : 'bg-red-50 border border-red-200 text-red-500'
-                  }
-                `}
+                className={`flex items-start gap-2 px-3 py-2.5 rounded-lg text-xs font-body ${darkMode ? 'bg-red-500/10 border border-red-500/20 text-red-400' : 'bg-red-50 border border-red-200 text-red-500'}`}
                 role="alert"
               >
                 <RiLockLine className="text-sm flex-shrink-0 mt-0.5" />
@@ -282,12 +210,7 @@ export default function LoginScreen({ onLogin, darkMode }) {
             >
               {loading ? (
                 <>
-                  <svg
-                    className="animate-spin h-4 w-4 text-white"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                  >
+                  <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
                   </svg>
@@ -303,12 +226,7 @@ export default function LoginScreen({ onLogin, darkMode }) {
           </form>
 
           {/* Footer */}
-          <div
-            className={`
-              px-6 py-3 border-t text-center
-              ${darkMode ? 'border-well-800' : 'border-stone-100'}
-            `}
-          >
+          <div className={`px-6 py-3 border-t text-center ${darkMode ? 'border-well-800' : 'border-stone-100'}`}>
             <p className={`font-mono text-[10px] ${darkMode ? 'text-well-600' : 'text-stone-400'}`}>
               v1.0.0 · GeoWell Pro · Secured Access
             </p>

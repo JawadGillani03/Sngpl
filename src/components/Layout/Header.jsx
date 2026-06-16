@@ -1,6 +1,6 @@
 /**
  * Header Component
- * Top bar with page title, actions, and theme toggle
+ * Top bar with page title, actions, theme toggle, and logged-in user badge.
  */
 
 import React from 'react';
@@ -9,12 +9,13 @@ import {
   RiMoonLine,
   RiDownload2Line,
   RiRefreshLine,
+  RiUserLine,
 } from 'react-icons/ri';
 
 const PAGE_TITLES = {
   calculator: { title: 'Proximity Calculator', subtitle: 'Analyze well-to-home distance using Haversine formula' },
-  history: { title: 'Calculation History', subtitle: 'All previous proximity analyses' },
-  wells: { title: 'Saved Wells', subtitle: 'Manage your well coordinates database' },
+  history:    { title: 'Calculation History',  subtitle: 'All previous proximity analyses' },
+  wells:      { title: 'Saved Wells',          subtitle: 'Manage your well coordinates database' },
 };
 
 export default function Header({
@@ -24,6 +25,7 @@ export default function Header({
   onExport,
   onReset,
   historyCount,
+  loggedInUser,  // ← new prop
 }) {
   const page = PAGE_TITLES[activeTab] || PAGE_TITLES.calculator;
 
@@ -44,6 +46,7 @@ export default function Header({
 
       {/* Action buttons */}
       <div className="flex items-center justify-end sm:justify-normal gap-2 flex-wrap">
+
         {/* History count badge */}
         {activeTab === 'history' && historyCount > 0 && (
           <span className={`
@@ -93,6 +96,21 @@ export default function Header({
             <RiRefreshLine className="text-sm sm:text-base" />
             <span className="hidden xs:inline">Reset</span>
           </button>
+        )}
+
+        {/* Logged-in user badge */}
+        {loggedInUser && (
+          <div className={`
+            flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-lg
+            text-xs sm:text-sm font-body font-medium border whitespace-nowrap
+            ${darkMode
+              ? 'border-well-700 text-well-300 bg-well-900'
+              : 'border-stone-200 text-stone-600 bg-stone-50'
+            }
+          `}>
+            <RiUserLine className="text-sm sm:text-base flex-shrink-0" />
+            <span>{loggedInUser}</span>
+          </div>
         )}
 
         {/* Theme toggle */}
