@@ -19,6 +19,7 @@ const VALID_USERS = [
   { id: 'Jawad Gillani',  password: 'jawad174@' },
   { id: 'Waqar Hussain',  password: 'waqar174@' },
   { id: 'Iftikhar Ahmad', password: '9309@'     },
+  { id: 'User 1', password: '174@'     }
 ];
 // ─────────────────────────────────────────────────────────────────
 
