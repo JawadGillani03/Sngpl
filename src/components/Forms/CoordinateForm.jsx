@@ -79,6 +79,7 @@ export default function CoordinateForm({
     { name: 'Makori East Well-3',   lat: 33.265298, lon: 71.344397, region: 'Makori East' },
     { name: 'Tolang Wast Well-1',   lat: 33.532068, lon: 71.638509, region: 'Tolang' },
     { name: 'Tolang Wast Well-2',   lat: 33.526168, lon: 71.641537, region: 'Tolang' },
+    { name: 'Bilitang Well-1',   lat: 33.511638, lon: 71.596968, region: 'Bilitang' },
   ];
 
   // Merge predefined + any externally saved wells (deduplicate by name)
