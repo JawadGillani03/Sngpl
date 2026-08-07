@@ -156,7 +156,7 @@ export default function Sidebar({ activeTab, setActiveTab, darkMode, onClose }) 
            Syed M Jawad H 
         </p>
         <p className={`text-xs font-body mt-0.5 ${darkMode ? 'text-well-600' : 'text-stone-400'}`}>
-          Oil &amp; Gas · Water Mgmt · Survey
+          Oil &amp; Gas Survey
         </p>
       </div>
     </aside>

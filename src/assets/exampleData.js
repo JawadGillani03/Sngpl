@@ -55,7 +55,7 @@ export const EXAMPLE_HISTORY = [
   {
     id: 'hist-demo-2',
     timestamp: new Date(Date.now() - 172800000).toISOString(),
-    well: { id: 'well-demo-1', name: 'Alpha-7 Petroleum Well', lat: 33.5731, lon: 73.0617 },
+    well: { id: 'well-demo-1', name: 'Alpha- Petroleum Well', lat: 33.5731, lon: 73.0617 },
     home: { name: 'Residence B', lat: 33.64, lon: 73.11 },
     distance: 8.24,
     status: 'Outside 5 KM Radius',

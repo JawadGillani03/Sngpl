@@ -14,12 +14,23 @@ import {
 
 export default function WellsManager({
   savedWells,
+  predefinedWells = [], // Add this prop
   onDelete,
   onLoad,
   darkMode,
 }) {
+  // Combine predefined and saved wells
+  const allWells = [
+    ...predefinedWells.map(well => ({
+      ...well,
+      isPredefined: true,
+      savedAt: new Date().toISOString(),
+    })),
+    ...savedWells
+  ];
+
   // ── Empty state ──
-  if (savedWells.length === 0) {
+  if (allWells.length === 0) {
     return (
       <div
         className={`
@@ -42,21 +53,26 @@ export default function WellsManager({
 
   return (
     <div className="space-y-2.5 sm:space-y-3 animate-fade-up">
-      {/* Count label */}
+      {/* Count label - show breakdown */}
       <p className={`font-body text-xs sm:text-sm ${darkMode ? 'text-well-400' : 'text-stone-500'}`}>
+        {predefinedWells.length > 0 && `${predefinedWells.length} default wells • `}
         {savedWells.length} saved {savedWells.length === 1 ? 'well' : 'wells'}
       </p>
 
       {/* Well cards */}
       <div className="grid gap-2.5 sm:gap-3">
-        {savedWells.map((well) => (
+        {allWells.map((well) => (
           <div
-            key={well.id}
+            key={well.id + (well.isPredefined ? '-predefined' : '')}
             className={`
               rounded-xl border transition-all duration-200
-              ${darkMode
-                ? 'bg-well-900 border-well-800 hover:border-well-700'
-                : 'bg-white border-stone-200 hover:border-stone-300 hover:shadow-card'
+              ${well.isPredefined 
+                ? (darkMode 
+                    ? 'bg-well-800/50 border-well-700/50' 
+                    : 'bg-stone-100/50 border-stone-300/50')
+                : (darkMode 
+                    ? 'bg-well-900 border-well-800 hover:border-well-700' 
+                    : 'bg-white border-stone-200 hover:border-stone-300 hover:shadow-card')
               }
             `}
           >
@@ -68,9 +84,13 @@ export default function WellsManager({
                 className={`
                   w-8 h-8 sm:w-9 sm:h-9 md:w-10 md:h-10
                   rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5
-                  ${darkMode
-                    ? 'bg-petroleum-600/15 text-petroleum-400'
-                    : 'bg-petroleum-50 text-petroleum-600'
+                  ${well.isPredefined
+                    ? (darkMode
+                        ? 'bg-amber-600/15 text-amber-400'
+                        : 'bg-amber-50 text-amber-600')
+                    : (darkMode
+                        ? 'bg-petroleum-600/15 text-petroleum-400'
+                        : 'bg-petroleum-50 text-petroleum-600')
                   }
                 `}
               >
@@ -79,15 +99,27 @@ export default function WellsManager({
 
               {/* Info block — takes all remaining space */}
               <div className="flex-1 min-w-0">
-                {/* Name */}
-                <p
-                  className={`
-                    font-body font-semibold text-sm leading-tight truncate
-                    ${darkMode ? 'text-white' : 'text-well-900'}
-                  `}
-                >
-                  {well.name}
-                </p>
+                {/* Name with predefined badge */}
+                <div className="flex items-center gap-2">
+                  <p
+                    className={`
+                      font-body font-semibold text-sm leading-tight truncate
+                      ${darkMode ? 'text-white' : 'text-well-900'}
+                    `}
+                  >
+                    {well.name}
+                  </p>
+                  {well.isPredefined && (
+                    <span className={`
+                      font-body text-[10px] px-1.5 py-0.5 rounded-full 
+                      ${darkMode 
+                        ? 'bg-amber-600/20 text-amber-400' 
+                        : 'bg-amber-100 text-amber-700'}
+                    `}>
+                      Default
+                    </span>
+                  )}
+                </div>
 
                 {/* Coordinates */}
                 <p
@@ -99,23 +131,34 @@ export default function WellsManager({
                   {well.lat.toFixed(6)}, {well.lon.toFixed(6)}
                 </p>
 
-                {/* Operator / type */}
-                {well.operator && (
+                {/* Region for predefined, Operator/type for saved */}
+                {well.isPredefined ? (
                   <p
                     className={`
                       font-body text-[10px] sm:text-xs mt-0.5 truncate
                       ${darkMode ? 'text-well-600' : 'text-stone-300'}
                     `}
                   >
-                    {well.type && <span className="mr-1.5">{well.type}</span>}
-                    {well.operator}
+                    {well.region || 'Default well'}
                   </p>
+                ) : (
+                  well.operator && (
+                    <p
+                      className={`
+                        font-body text-[10px] sm:text-xs mt-0.5 truncate
+                        ${darkMode ? 'text-well-600' : 'text-stone-300'}
+                      `}
+                    >
+                      {well.type && <span className="mr-1.5">{well.type}</span>}
+                      {well.operator}
+                    </p>
+                  )
                 )}
 
-                {/* Date + depth on mobile (below coords) */}
+                {/* Date + depth on mobile */}
                 <div className="flex items-center gap-2 mt-1.5 sm:hidden">
                   <p className={`font-body text-[10px] ${darkMode ? 'text-well-600' : 'text-stone-400'}`}>
-                    {new Date(well.savedAt).toLocaleDateString()}
+                    {well.isPredefined ? 'Default' : new Date(well.savedAt).toLocaleDateString()}
                   </p>
                   {well.depth && (
                     <p className={`font-mono text-[10px] ${darkMode ? 'text-well-600' : 'text-stone-400'}`}>
@@ -125,10 +168,10 @@ export default function WellsManager({
                 </div>
               </div>
 
-              {/* Date + depth on sm+ (right-aligned) */}
+              {/* Date + depth on sm+ */}
               <div className="hidden sm:flex flex-col items-end gap-0.5 flex-shrink-0 mt-0.5">
                 <p className={`font-body text-xs ${darkMode ? 'text-well-600' : 'text-stone-400'}`}>
-                  {new Date(well.savedAt).toLocaleDateString()}
+                  {well.isPredefined ? 'Default' : new Date(well.savedAt).toLocaleDateString()}
                 </p>
                 {well.depth && (
                   <p className={`font-mono text-xs ${darkMode ? 'text-well-600' : 'text-stone-400'}`}>
@@ -156,20 +199,22 @@ export default function WellsManager({
                   <RiArrowRightLine className="text-xs sm:text-sm" />
                 </button>
 
-                {/* Delete */}
-                <button
-                  onClick={() => onDelete(well.id)}
-                  title="Delete well"
-                  className={`
-                    p-1.5 rounded-lg transition-all flex-shrink-0
-                    ${darkMode
-                      ? 'text-well-600 hover:text-red-400 hover:bg-red-500/10'
-                      : 'text-stone-300 hover:text-red-500 hover:bg-red-50'
-                    }
-                  `}
-                >
-                  <RiDeleteBinLine className="text-sm" />
-                </button>
+                {/* Delete - only for non-predefined wells */}
+                {!well.isPredefined && (
+                  <button
+                    onClick={() => onDelete(well.id)}
+                    title="Delete well"
+                    className={`
+                      p-1.5 rounded-lg transition-all flex-shrink-0
+                      ${darkMode
+                        ? 'text-well-600 hover:text-red-400 hover:bg-red-500/10'
+                        : 'text-stone-300 hover:text-red-500 hover:bg-red-50'
+                      }
+                    `}
+                  >
+                    <RiDeleteBinLine className="text-sm" />
+                  </button>
+                )}
               </div>
             </div>
           </div>
