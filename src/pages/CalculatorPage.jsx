@@ -6,17 +6,25 @@
  * FIX: Calculate button moved outside the left panel so it is always
  * visible on mobile regardless of which tab (form/map) is active.
  * On desktop (lg+) it stays inside the left sidebar as before.
+ *
+ * NEW: Bulk CSV proximity check — upload a CSV of house coordinates and
+ * see, per well, which houses fall inside its 5km radius (and which don't
+ * fall inside any well's radius at all).
  */
 
 import React, { useState } from 'react';
 import CoordinateForm from '../components/Forms/CoordinateForm';
 import ProximityMap from '../components/Map/ProximityMap';
 import ResultCard from '../components/UI/ResultCard';
+import CsvUploadPanel from '../components/CSV/CsvUploadPanel';
+import ProximityResultsPanel from '../components/UI/ProximityResultsPanel';
+import { predefinedWells } from '../data/wells';
 import {
   RiFlashlightLine,
   RiTestTubeLine,
   RiMapPin2Line,
   RiEdit2Line,
+  RiFileList3Line,
 } from 'react-icons/ri';
 
 export default function CalculatorPage({
@@ -32,6 +40,15 @@ export default function CalculatorPage({
   darkMode,
 }) {
   const [mobileTab, setMobileTab] = useState('form');
+
+  // ── Bulk CSV proximity state ──────────────────────────────────
+  const [csvResults, setCsvResults] = useState(null);
+  const [csvHouses, setCsvHouses] = useState([]);
+
+  const handleCsvResults = (results, houses) => {
+    setCsvResults(results);
+    setCsvHouses(houses);
+  };
 
   const CalculateButton = () => (
     <button
@@ -135,7 +152,7 @@ export default function CalculatorPage({
           </button>
 
           {/* Well + Home forms */}
-          <div className="flex pb-20 flex-col gap-3 sm:gap-4 md:grid md:grid-cols-2 lg:flex lg:flex-col">
+          <div className="flex flex-col gap-3 sm:gap-4 md:grid md:grid-cols-2 lg:flex lg:flex-col">
             <CoordinateForm
               type="well"
               form={wellForm}
@@ -164,6 +181,43 @@ export default function CalculatorPage({
               <ResultCard result={result} darkMode={darkMode} />
             </div>
           )}
+
+          {/* ── Bulk CSV proximity check ──────────────────────────────── */}
+          <div
+            className={`
+              rounded-xl border p-3 sm:p-4 flex flex-col gap-3
+              ${darkMode ? 'border-well-800 bg-well-900/30' : 'border-stone-200 bg-white'}
+            `}
+          >
+            <div className="flex items-center gap-2">
+              <RiFileList3Line className={darkMode ? 'text-petroleum-400' : 'text-petroleum-600'} />
+              <h3
+                className={`
+                  font-display font-semibold text-sm
+                  ${darkMode ? 'text-white' : 'text-well-900'}
+                `}
+              >
+                Bulk Check (CSV)
+              </h3>
+            </div>
+            <p className={`text-xs font-body -mt-2 ${darkMode ? 'text-well-500' : 'text-stone-400'}`}>
+              Upload a CSV of house coordinates to check them against all {predefinedWells.length} wells at once.
+            </p>
+
+            <CsvUploadPanel
+              wells={predefinedWells}
+              radiusMeters={5000}
+              onResults={handleCsvResults}
+              darkMode={darkMode}
+            />
+
+            {csvResults && (
+              <ProximityResultsPanel results={csvResults} darkMode={darkMode} />
+            )}
+          </div>
+
+          {/* Bottom spacer so content doesn't hide behind mobile nav */}
+          <div className="pb-16 lg:pb-0" />
         </div>
 
         {/* ── RIGHT PANEL: Map ── */}

@@ -14,7 +14,8 @@
  *   especially useful on mobile where the top-bar + bottom-bar eat into height.
  * • Dropdown panel z-index raised to z-[70] so it clears the Sidebar's fixed
  *   top-bar (z-40) and drawer (z-[60]) on mobile.
- * • No other logic changes.
+ * • Predefined wells list moved to src/data/wells.js so it can be shared
+ *   with the bulk CSV proximity feature (CsvUploadPanel).
  */
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -29,6 +30,7 @@ import {
   RiRadarLine,
   RiSignalWifiErrorLine,
 } from 'react-icons/ri';
+import { predefinedWells } from '../../data/wells';
 
 // ─── Haversine distance (km) between two lat/lon points ───────────────────────
 function haversineKm(lat1, lon1, lat2, lon2) {
@@ -66,21 +68,8 @@ export default function CoordinateForm({
   const nameError  = errors[`${type}_name`];
   const coordError = errors[`${type}_coords`];
 
-  // ─── Predefined wells data ─────────────────────────────────────────────────
-  const predefinedWells = [
-    { name: 'Dhok Hussain Well-1',  lat: 33.451539, lon: 71.585795, region: 'Dhok Hussain' },
-    { name: 'Dhok Hussain Well-2',  lat: 33.453823, lon: 71.590830, region: 'Dhok Hussain' },
-    { name: 'Tough Well-1',         lat: 33.564671, lon: 71.526270, region: 'Tough' },
-    { name: 'Tough Well-2',         lat: 33.566764, lon: 71.523612, region: 'Tough' },
-    { name: 'Tough Well-3',         lat: 33.568457, lon: 71.520554, region: 'Tough' },
-    { name: 'Shekian Well-1',       lat: 33.583988, lon: 71.509603, region: 'Shekian' },
-    { name: 'Makori East Well-1',   lat: 33.260341, lon: 71.335008, region: 'Makori East' },
-    { name: 'Makori East Well-2',   lat: 33.269111, lon: 71.327344, region: 'Makori East' },
-    { name: 'Makori East Well-3',   lat: 33.265298, lon: 71.344397, region: 'Makori East' },
-    { name: 'Tolang Wast Well-1',   lat: 33.532068, lon: 71.638509, region: 'Tolang' },
-    { name: 'Tolang Wast Well-2',   lat: 33.526168, lon: 71.641537, region: 'Tolang' },
-    { name: 'Bilitang Well-1',   lat: 33.511638, lon: 71.596968, region: 'Bilitang' },
-  ];
+  // ─── Predefined wells data now comes from src/data/wells.js ───────────────
+  // (shared with the CSV bulk-check feature — see CsvUploadPanel)
 
   // Merge predefined + any externally saved wells (deduplicate by name)
   const allWells = [

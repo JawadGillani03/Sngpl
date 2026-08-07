@@ -14,6 +14,7 @@ export default function WellsPage({
 }) {
   return (
     <div className="overflow-y-auto h-full lg:pr-1 px-0 sm:px-1 lg:px-0">
+      
       <WellsManager
         savedWells={savedWells}
         onDelete={onDelete}
