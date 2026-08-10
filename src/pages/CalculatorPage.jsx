@@ -7,9 +7,13 @@
  * visible on mobile regardless of which tab (form/map) is active.
  * On desktop (lg+) it stays inside the left sidebar as before.
  *
- * NEW: Bulk CSV proximity check — upload a CSV of house coordinates and
+ * Bulk CSV proximity check — upload a CSV of house coordinates and
  * see, per well, which houses fall inside its 5km radius (and which don't
  * fall inside any well's radius at all).
+ *
+ * NEW: clicking a house in the CSV results now loads that house into the
+ * Home Coordinates form AND loads its matched (or nearest) well into the
+ * Well Coordinates form, so you can immediately hit Calculate on that pair.
  */
 
 import React, { useState } from 'react';
@@ -48,6 +52,22 @@ export default function CalculatorPage({
   const handleCsvResults = (results, houses) => {
     setCsvResults(results);
     setCsvHouses(houses);
+  };
+
+  // Clicking a house in the results panel loads it + its well into the forms
+  const handleSelectHouse = ({ house, well }) => {
+    if (house) {
+      updateHomeForm('name', house.name);
+      updateHomeForm('lat', house.lat);
+      updateHomeForm('lon', house.lon);
+    }
+    if (well) {
+      updateWellForm('name', well.name);
+      updateWellForm('lat', well.lat);
+      updateWellForm('lon', well.lon);
+    }
+    // Jump to the Inputs tab on mobile so the user sees the filled forms
+    setMobileTab('form');
   };
 
   const CalculateButton = () => (
@@ -212,7 +232,11 @@ export default function CalculatorPage({
             />
 
             {csvResults && (
-              <ProximityResultsPanel results={csvResults} darkMode={darkMode} />
+              <ProximityResultsPanel
+                results={csvResults}
+                darkMode={darkMode}
+                onSelectHouse={handleSelectHouse}
+              />
             )}
           </div>
 
