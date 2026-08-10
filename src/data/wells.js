@@ -14,4 +14,6 @@ export const predefinedWells = [
   { id: 'Tolang Wast Well-1',  name: 'Tolang Wast Well-1',   lat: 33.532068, lon: 71.638509, region: 'Tolang' },
   { id: 'Tolang Wast Well-2',  name: 'Tolang Wast Well-2',   lat: 33.526168, lon: 71.641537, region: 'Tolang' },
   { id: 'Bilitang Well-1',     name: 'Bilitang Well-1',      lat: 33.511638, lon: 71.596968, region: 'Bilitang' },
+  { id: 'Razgeer Well-1',     name: 'Razgeer Well-1',      lat: 33.529803, lon: 71.546746, region: 'Razgeer' },
+  { id: 'Babagzai',     name: 'Babagzai',      lat: 33.529803, lon: 71.546746, region: 'Babagzai' },
 ];
